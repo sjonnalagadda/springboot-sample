@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>2.6.7</version>
+        <relativePath/> <!-- lookup parent from repository -->
+    </parent>
+
+    <groupId>org.example</groupId>
+    <artifactId>test</artifactId>
+    <version>1.0-SNAPSHOT</version>
+
+    <properties>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+        <spring-web.version>2.6.7</spring-web.version>
+        <spring-actuator.version>2.6.7</spring-actuator.version>
+        <docker-image.version>0.0.1</docker-image.version>
+        <application.port>8080</application.port>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+            <version>${spring-web.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+            <version>${spring-actuator.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>io.fabric8</groupId>
+                <artifactId>docker-maven-plugin</artifactId>
+                <version>0.39.1</version>
+                <configuration>
+                    <images>
+                        <image>
+                            <alias>demo</alias>
+                            <name>test/example:${docker-image.version}</name>
+                            <build>
+                                <!-- Use a JDK image. Photon may be desired or necessary later -->
+                                <from>test/openjdk:11</from>
+                                <entryPoint>java -jar /maven/${project.build.finalName}.jar</entryPoint>
+                                <assembly>
+                                    <inline>
+                                        <files>
+                                            <file>
+                                                <source>
+                                                    ${project.build.directory}/${project.build.finalName}.jar
+                                                </source>
+                                                <outputDirectory>/</outputDirectory>
+                                                <destName>${project.build.finalName}.jar</destName>
+                                            </file>
+                                        </files>
+                                    </inline>
+                                </assembly>
+                            </build>
+                            <run>
+                                <ports>
+                                    <port>${application.port}:${application.port}</port>
+                                </ports>
+                                <wait>
+                                    <!-- wait for the application to come up by waiting for the application's 'about'
+                                    API to return a 2xx. This default setting encourages consistency across applications,
+                                    so please do not override it (instead, make the application adhere to these defaults
+                                    unless there is a strong reason not to) -->
+                                    <http>
+                                        <url>http://localhost:${application.port}/actuator/health</url>
+                                    </http>
+                                    <time>100000</time>
+                                </wait>
+                                <log>
+                                    <color>green</color>
+                                </log>
+                            </run>
+                        </image>
+                    </images>
+
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>start</id>
+                        <phase>pre-integration-test</phase>
+                        <goals>
+                            <goal>build</goal>
+                            <goal>start</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>stop</id>
+                        <phase>post-integration-test</phase>
+                        <goals>
+                            <goal>stop</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
