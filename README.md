@@ -8,7 +8,6 @@ This is a sample springboot project with health end-point
 + Maven 3.6.3+
 + Docker
 + JDK11 image with tag test/openjdk:11 on local machine. From DockerHub get this image ```openjdk:11``` and tag it as required.
-+ Port 8080
 
 ## Setup quick test
 
