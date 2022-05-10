@@ -2,20 +2,22 @@ package org.example.test.controllers;
 
 import org.example.test.service.Address;
 import org.example.test.service.AddressBookService;
-import org.example.test.service.AddressNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.Optional;
 
 @RestController
@@ -25,15 +27,16 @@ public class AddressBookController {
     AddressBookService addressBookService;
 
     @PostMapping(path = "/address", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Void> createAddress(@RequestBody Address address, final HttpRequest httpRequest) {
+    public ResponseEntity<Void> createAddress(@RequestBody Address address, final HttpServletRequest httpRequest) {
         final String id = addressBookService.addAddress(address);
-        final ResponseEntity<Void> responseEntity = new ResponseEntity<>(HttpStatus.CREATED);
-        final StringBuilder sb = new StringBuilder(httpRequest.getURI().toString()).append('/').append(id);
-        responseEntity.getHeaders().add(HttpHeaders.LOCATION, sb.toString());
+        final StringBuilder sb = new StringBuilder("http://").append(httpRequest.getHeader(HttpHeaders.HOST)).append('/').append(id);
+        final MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
+        headers.add(HttpHeaders.LOCATION, sb.toString());
+        final ResponseEntity<Void> responseEntity = new ResponseEntity<>(headers, HttpStatus.CREATED);
         return responseEntity;
     }
 
-    @PostMapping(path = "/address/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(path = "/address/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> updateAddress(@RequestBody Address address, @PathVariable String id) {
         if(addressBookService.updateAddress(id, address)) {
             return new ResponseEntity<>(HttpStatus.OK);

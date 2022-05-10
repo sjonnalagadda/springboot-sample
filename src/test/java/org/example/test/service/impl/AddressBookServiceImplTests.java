@@ -68,7 +68,7 @@ public class AddressBookServiceImplTests {
         return Address.builder().address1("1 North Pole").city("NA").zipCode("00001").build();
     }
     private AddressEntity addressFromDb() {
-        return AddressEntity.builder().id(UUID.randomUUID())
+        return AddressEntity.builder().id(UUID.randomUUID().toString())
                 .address1("1 North Pole").city("NA").zipCode("00001").build();
     }
 }

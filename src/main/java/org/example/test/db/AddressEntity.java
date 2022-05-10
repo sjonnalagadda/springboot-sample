@@ -7,7 +7,6 @@ import lombok.NoArgsConstructor;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import java.util.UUID;
 
 @Entity
 @Data
@@ -16,7 +15,7 @@ import java.util.UUID;
 @Builder
 public class AddressEntity {
     @Id
-    private UUID id;
+    private String id;
     private String address1;
     private String address2;
     private String city;

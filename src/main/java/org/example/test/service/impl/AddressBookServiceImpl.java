@@ -23,7 +23,7 @@ public class AddressBookServiceImpl implements AddressBookService {
     @Override
     public String addAddress(Address address) {
         final UUID uuid = UUID.randomUUID();
-        addressBookRepository.save(AddressEntity.builder().id(uuid)
+        addressBookRepository.save(AddressEntity.builder().id(uuid.toString())
                 .address1(address.getAddress1())
                 .address2(address.getAddress2())
                 .city(address.getCity())
@@ -37,9 +37,9 @@ public class AddressBookServiceImpl implements AddressBookService {
             AddressEntity addressEntity = addressBookRepository.getById(
                     convertToUUID(id));
             addressEntity.setAddress1(address.getAddress1());
-            addressEntity.setAddress1(address.getAddress2());
-            addressEntity.setAddress1(address.getCity());
-            addressEntity.setAddress1(address.getZipCode());
+            addressEntity.setAddress2(address.getAddress2());
+            addressEntity.setCity(address.getCity());
+            addressEntity.setZipCode(address.getZipCode());
             addressBookRepository.save(addressEntity);
             return true;
         } catch (EntityNotFoundException e) {
@@ -75,7 +75,7 @@ public class AddressBookServiceImpl implements AddressBookService {
         }
     }
 
-    private UUID convertToUUID(String id) {
-        return UUID.fromString(id);
+    private String convertToUUID(String id) {
+        return UUID.fromString(id).toString();
     }
 }

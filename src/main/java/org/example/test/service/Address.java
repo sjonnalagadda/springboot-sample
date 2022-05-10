@@ -1,10 +1,14 @@
 package org.example.test.service;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
+import lombok.extern.jackson.Jacksonized;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -14,6 +18,8 @@ import javax.validation.constraints.Size;
 @ToString
 @EqualsAndHashCode
 @Builder
+@Jacksonized
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Address {
     @NotNull(message = "Address 1 can not be empty.")
     @Size(max = 100, message = "Address 1 length can not be more than 100 characters.")
