@@ -28,6 +28,9 @@
         <slf4j-api.version>1.7.36</slf4j-api.version>
         <logback.version>1.2.10</logback.version>
         <springboot-validator.version>2.6.7</springboot-validator.version>
+        <jacoco.version>0.8.8</jacoco.version>
+        <jacoco.agent.port>7700</jacoco.agent.port>
+        <jacoco.agent.bind.address>0.0.0.0</jacoco.agent.bind.address>
     </properties>
 
     <dependencies>
@@ -88,6 +91,13 @@
             <artifactId>logback-classic</artifactId>
             <version>${logback.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.jacoco</groupId>
+            <artifactId>org.jacoco.agent</artifactId>
+            <version>${jacoco.version}</version>
+            <classifier>runtime</classifier>
+        </dependency>
+
     </dependencies>
 
     <build>
@@ -95,6 +105,48 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>2.6.7</version>
+                <configuration>
+                    <excludes>
+                        <exclude>
+                            <groupId>org.jacoco</groupId>
+                            <artifactId>org.jacoco.agent</artifactId>
+                        </exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.8</version>
+                <executions>
+                    <execution>
+                        <id>prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                        <phase>initialize</phase>
+                    </execution>
+                    <execution>
+                        <configuration>
+                            <address>${jacoco.agent.bind.address}</address>
+                            <port>${jacoco.host.port}</port>
+                            <destFile>${project.build.directory}/jacoco-it.exec</destFile>
+                        </configuration>
+                        <id>get-report</id>
+                        <phase>post-integration-test</phase>
+                        <goals>
+                            <goal>dump</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report-aggregate</id>
+                        <goals>
+                            <goal>report-aggregate</goal>
+                        </goals>
+                        <phase>verify</phase>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>io.fabric8</groupId>
@@ -106,9 +158,10 @@
                             <alias>demo</alias>
                             <name>test/example:${docker-image.version}</name>
                             <build>
-                                <!-- Use a JDK image. Photon may be desired or necessary later -->
                                 <from>test/openjdk:11</from>
-                                <entryPoint>java -jar /maven/${project.build.finalName}.jar</entryPoint>
+                                <entryPoint>
+                                    java -javaagent:/maven/org.jacoco.agent-${jacoco.version}-runtime.jar=output=tcpserver,address=*,port=${jacoco.agent.port},inclnolocationclasses=true,includes=org.example.test.* -jar /maven/${project.build.finalName}.jar
+                                </entryPoint>
                                 <assembly>
                                     <inline>
                                         <files>
@@ -120,18 +173,23 @@
                                                 <destName>${project.build.finalName}.jar</destName>
                                             </file>
                                         </files>
+                                        <dependencySets>
+                                            <dependencySet>
+                                                <outputDirectory>/</outputDirectory>
+                                                <includes>
+                                                    <include>org.jacoco:org.jacoco.agent:jar:runtime</include>
+                                                </includes>
+                                            </dependencySet>
+                                        </dependencySets>
                                     </inline>
                                 </assembly>
                             </build>
                             <run>
                                 <ports>
+                                    <port>${jacoco.host.port}:${jacoco.agent.port}</port>
                                     <port>${application.port}:8080</port>
                                 </ports>
                                 <wait>
-                                    <!-- wait for the application to come up by waiting for the application's 'about'
-                                    API to return a 2xx. This default setting encourages consistency across applications,
-                                    so please do not override it (instead, make the application adhere to these defaults
-                                    unless there is a strong reason not to) -->
                                     <http>
                                         <url>http://localhost:${application.port}/actuator/health</url>
                                     </http>
@@ -143,7 +201,6 @@
                             </run>
                         </image>
                     </images>
-
                 </configuration>
                 <executions>
                     <execution>
